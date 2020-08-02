@@ -207,9 +207,7 @@ namespace SCS_Logbook
                 Telemetry.JobDelivered += SaveLog_Click;
             else
                 Telemetry.JobDelivered -= SaveLog_Click; //Stop Listening When "LogPerTrip" is disabled
-
         }
         #endregion
-
     }
 }

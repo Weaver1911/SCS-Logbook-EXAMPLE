@@ -1,4 +1,4 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/weaver26/scs-logbook-example/badge/master)](https://www.codefactor.io/repository/github/weaver26/scs-logbook-example/overview/master)
+[![CodeFactor](https://www.codefactor.io/repository/github/weaver1911/scs-logbook-example/badge)](https://www.codefactor.io/repository/github/weaver1911/scs-logbook-example)
 
 # SCS Logbook-EXAMPLE
 Example code of a digital Logbook

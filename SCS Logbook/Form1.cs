@@ -1,11 +1,11 @@
-﻿using System;
-using System.Drawing;
-using System.Globalization;
-using System.Drawing.Printing;
-using System.IO;
-using System.Windows.Forms;
 using SCSSdkClient;
 using SCSSdkClient.Object;
+using System;
+using System.Drawing;
+using System.Drawing.Printing;
+using System.Globalization;
+using System.IO;
+using System.Windows.Forms;
 
 namespace SCS_Logbook
 {
@@ -28,6 +28,7 @@ namespace SCS_Logbook
 
     public partial class LogBook : Form
     {
+
         // Telemetry SDK
         private SCSSdkTelemetry Telemetry;
         // Data coming form Telemetry Dll
@@ -42,12 +43,14 @@ namespace SCS_Logbook
         private readonly PrintDocument p_log = new PrintDocument();
         private readonly PrintDialog p_dialog = new PrintDialog();
 
+        public SCSTelemetry Test { get; private set; }
+
         #region Telemetry Initialization
         public LogBook()
         {
             InitializeComponent();
             p_log.PrintPage += new PrintPageEventHandler(document_PrintPage);
-            Txt_Log.Text = "[" + DateTime.Now.ToString(CultureInfo.CurrentCulture.DateTimeFormat) + "] \nLogbook initialized";
+            Txt_Log.Text = $"[{DateTime.Now.ToString(CultureInfo.CurrentCulture.DateTimeFormat)}] \nLogbook initialized";
             //CheckForIllegalCrossThreadCalls = false; // Uncomment this line if you get CrossThread Calls Error while debug
         }
 
@@ -60,34 +63,38 @@ namespace SCS_Logbook
             SubscribeData(); // If not Subscribe to the Listeners
         }
 
-        private  void SubscribeData()
-        { 
+        private void SubscribeData()
+        {
             //Automatically refresh values from SDK (1x/sec If sdk is not loaded (game is not running))
             Telemetry.Data += Telemetry_Data;
-            Telemetry.JobCancelled += TelemetryJobCancelled;
-            Telemetry.JobDelivered += TelemetryJobDelivered;
-            Telemetry.JobStarted += TelemetryOnJobStarted;
+            Telemetry.JobCancelled += TelemetryJobCancelled;      //Subscribe JobCancel function to "JobCanceled" Telemetry event.
+            Telemetry.JobDelivered += TelemetryJobDelivered;      //Subscribe JobDelivered function to "JobDelivered" Telemetry event.
+            Telemetry.JobStarted += TelemetryOnJobStarted;        //Subscribe JobStarted function to "JobStarted" Telemetry event.
+
+            //[TEST] Force event to raise by clicking a button.(running the game is not required)
+            testToolStripMenuItem.Click += TelemetryJobCancelled; //Subscribe JobCancel function to "Test" (menu item) Click event.
         }
         #endregion
-        
+
         //***************** Telemetry Functions *****************
         #region Game Data
         private void Telemetry_Data(SCSTelemetry data, bool updated)
         {
+            Test = data;
             // Use any of the available data provided by the SDK here.
             // Use SCSTelemetry "data" parameter.
-            toolStripStatusLabel1.Text = "Game: " + data.Game;
+            toolStripStatusLabel1.Text = $"Game: { data.Game}";
 
             if (data.SpecialEventsValues.JobDelivered)
             {
-                // Sets the Revenue and the XP when "JobDelivered" event occured
+                // Sets the Revenue and the XP when "JobDelivered" event occurs
                 Amount = data.GamePlay.JobDelivered.Revenue.ToString("#0");
                 XP = data.GamePlay.JobDelivered.EarnedXp;
             }
 
             if (data.SpecialEventsValues.JobCancelled)
             {
-                // Sets the Loss(money) "JobCancelled" event occured
+                // Sets the Loss(money) "JobCancelled" event occurs
                 Amount = data.GamePlay.JobCancelled.Penalty.ToString("#0");
             }
 
@@ -105,13 +112,13 @@ namespace SCS_Logbook
 
         #region Game Events
         private void TelemetryOnJobStarted(object sender, EventArgs e) // Action when the corresponding event occurs
-        { Txt_Log.Text += "\nJob Started OR loaded: " + Origin + " -> " + Destination + " [$" + Income + "]"; }
+        { Txt_Log.Text += $"\nJob Started OR loaded: {Origin} -> {Destination}  [${Income}]"; }
 
         private void TelemetryJobCancelled(object sender, EventArgs e) // Action when the corresponding event occurs
-        { Txt_Log.Text += "\nJob Canceled: You paid $" + Amount + " in damages"; }
+        { Txt_Log.Text += $"\nJob Canceled: You paid ${Amount} in damages"; }
 
         private void TelemetryJobDelivered(object sender, EventArgs e) // Action when the corresponding event occurs
-        { Txt_Log.Text += "\nJob from " + Corp_Origin + " delivered to " + Corp_Destination + ". \nYou have been paid $" + Amount + " and earned " + XP + "XP"; }
+        { Txt_Log.Text += $"\nJob from {Corp_Origin} delivered to {Corp_Destination}. \nYou have been paid ${Amount} and earned {XP}xp"; }
 
         private void TelemetryFined(object sender, EventArgs e)
         {
@@ -183,7 +190,7 @@ namespace SCS_Logbook
             // Vars for the different save system. You can use these directly, but this way keeps code cleaner
             var TripSave = SavePath + DateTime.Now.Date.ToString("MMM-dd-yy") + Route + Extension;
             var UniSave = SavePath + DateTime.Now.Date.ToString("MMM-dd-yy") + Extension;
-            
+
             if (!Directory.Exists(SavePath))// Create "Logs" folder in case is does not exist (deleted)
                 Directory.CreateDirectory(SavePath);
 
@@ -207,7 +214,9 @@ namespace SCS_Logbook
                 Telemetry.JobDelivered += SaveLog_Click;
             else
                 Telemetry.JobDelivered -= SaveLog_Click; //Stop Listening When "LogPerTrip" is disabled
+
         }
         #endregion
+
     }
 }
